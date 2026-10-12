@@ -26,6 +26,14 @@ const nitroOption: Parameters<typeof viteNitro>[0] = {
     dirs: ["server/utils", "shared"],
   },
   preset: "node-server",
+  cloudflare: {
+    pages: {
+      routes: {
+        include: ["/*"],
+        exclude: ["/assets/*", "/icons/*", "/icon.svg", "/manifest.webmanifest", "/pwa-*.png", "/apple-touch-icon.png", "/og-image.png", "/robots.txt", "/sitemap.xml", "/sw.js", "/swx.js", "/workbox-*.js", "/Baloo2-Bold.subset.ttf"],
+      },
+    },
+  },
   alias: {
     "@shared": join(projectDir, "shared"),
     "#": join(projectDir, "server"),
