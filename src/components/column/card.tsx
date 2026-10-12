@@ -17,10 +17,16 @@ export interface ItemsProps extends React.HTMLAttributes<HTMLDivElement> {
 
 interface NewsCardProps {
   id: SourceID
+  binary?: boolean
   setHandleRef?: (ref: HTMLElement | null) => void
 }
 
-export const CardWrapper = forwardRef<HTMLElement, ItemsProps>(({ id, isDragging, setHandleRef, style, ...props }, dndRef) => {
+function DisplayText({ children, binary = false }: { children: React.ReactNode, binary?: boolean }) {
+  if (!binary || typeof children !== "string") return <>{children}</>
+  return <>{toBinaryText(children)}</>
+}
+
+export const CardWrapper = forwardRef<HTMLElement, ItemsProps & { binary?: boolean }>(({ id, binary = false, isDragging, setHandleRef, style, ...props }, dndRef) => {
   const ref = useRef<HTMLDivElement>(null)
 
   const inView = useInView(ref, {
@@ -45,12 +51,12 @@ export const CardWrapper = forwardRef<HTMLElement, ItemsProps>(({ id, isDragging
       }}
       {...props}
     >
-      {inView && <NewsCard id={id} setHandleRef={setHandleRef} />}
+      {inView && <NewsCard id={id} binary={binary} setHandleRef={setHandleRef} />}
     </div>
   )
 })
 
-function NewsCard({ id, setHandleRef }: NewsCardProps) {
+function NewsCard({ id, binary = false, setHandleRef }: NewsCardProps) {
   const { refresh } = useRefetch()
   const { data, isFetching, isError } = useQuery({
     queryKey: ["source", id],
@@ -123,11 +129,11 @@ function NewsCard({ id, setHandleRef }: NewsCardProps) {
                 className="text-xl font-bold"
                 title={sources[id].desc}
               >
-                {sources[id].name}
+                <DisplayText binary={binary}>{sources[id].name}</DisplayText>
               </span>
-              {sources[id]?.title && <span className={$("text-sm", `color-${sources[id].color} bg-base op-80 bg-op-50! px-1 rounded`)}>{sources[id].title}</span>}
+              {sources[id]?.title && <span className={$("text-sm", `color-${sources[id].color} bg-base op-80 bg-op-50! px-1 rounded`)}><DisplayText binary={binary}>{sources[id].title}</DisplayText></span>}
             </span>
-            <span className="text-xs op-70"><UpdatedTime isError={isError} updatedTime={data?.updatedTime} /></span>
+            <span className="text-xs op-70"><UpdatedTime isError={isError} updatedTime={data?.updatedTime} binary={binary} /></span>
           </span>
         </div>
         <div className={$("flex gap-2 text-lg", `color-${sources[id].color}`)}>
@@ -163,18 +169,17 @@ function NewsCard({ id, setHandleRef }: NewsCardProps) {
         defer
       >
         <div className={$("transition-opacity-500", isFetching && "op-20")}>
-          {!!data?.items?.length && (sources[id].type === "hottest" ? <NewsListHot items={data.items} /> : <NewsListTimeLine items={data.items} />)}
+          {!!data?.items?.length && (sources[id].type === "hottest" ? <NewsListHot items={data.items} binary={binary} /> : <NewsListTimeLine items={data.items} binary={binary} />)}
         </div>
       </OverlayScrollbar>
     </>
   )
 }
 
-function UpdatedTime({ isError, updatedTime }: { updatedTime: any, isError: boolean }) {
+function UpdatedTime({ isError, updatedTime, binary = false }: { updatedTime: any, isError: boolean, binary?: boolean }) {
   const relativeTime = useRelativeTime(updatedTime ?? "")
-  if (relativeTime) return `${relativeTime}更新`
-  if (isError) return "获取失败"
-  return "加载中..."
+  const text = relativeTime ? `${relativeTime}更新` : isError ? "获取失败" : "加载中..."
+  return <DisplayText binary={binary}>{text}</DisplayText>
 }
 
 function DiffNumber({ diff }: { diff: number }) {
@@ -222,11 +227,11 @@ function ExtraInfo({ item }: { item: NewsItem }) {
   }
 }
 
-function NewsUpdatedTime({ date }: { date: string | number }) {
+function NewsUpdatedTime({ date, binary = false }: { date: string | number, binary?: boolean }) {
   const relativeTime = useRelativeTime(date)
-  return <>{relativeTime}</>
+  return <DisplayText binary={binary}>{relativeTime}</DisplayText>
 }
-function NewsListHot({ items }: { items: NewsItem[] }) {
+function NewsListHot({ items, binary = false }: { items: NewsItem[], binary?: boolean }) {
   const { width } = useWindowSize()
   return (
     <ol className="flex flex-col gap-2">
@@ -242,15 +247,15 @@ function NewsListHot({ items }: { items: NewsItem[] }) {
           )}
         >
           <span className={$("bg-neutral-400/10 min-w-6 flex justify-center items-center rounded-md text-sm")}>
-            {i + 1}
+            <DisplayText binary={binary}>{String(i + 1)}</DisplayText>
           </span>
           {!!item.extra?.diff && <DiffNumber diff={item.extra.diff} />}
           <span className="self-start line-height-none">
             <span className="mr-2 text-base">
-              {item.title}
+              <DisplayText binary={binary}>{item.title}</DisplayText>
             </span>
             <span className="text-xs text-neutral-400/80 truncate align-middle">
-              <ExtraInfo item={item} />
+              {binary ? <DisplayText binary>{item.extra?.info ?? ""}</DisplayText> : <ExtraInfo item={item} />}
             </span>
           </span>
         </a>
@@ -259,7 +264,7 @@ function NewsListHot({ items }: { items: NewsItem[] }) {
   )
 }
 
-function NewsListTimeLine({ items }: { items: NewsItem[] }) {
+function NewsListTimeLine({ items, binary = false }: { items: NewsItem[], binary?: boolean }) {
   const { width } = useWindowSize()
   return (
     <ol className="border-s border-neutral-400/50 flex flex-col ml-1">
@@ -268,10 +273,10 @@ function NewsListTimeLine({ items }: { items: NewsItem[] }) {
           <span className="flex items-center gap-1 text-neutral-400/50 ml--1px">
             <span className="">-</span>
             <span className="text-xs text-neutral-400/80">
-              {(item.pubDate || item?.extra?.date) && <NewsUpdatedTime date={(item.pubDate || item?.extra?.date)!} />}
+              {(item.pubDate || item?.extra?.date) && <NewsUpdatedTime date={(item.pubDate || item?.extra?.date)!} binary={binary} />}
             </span>
             <span className="text-xs text-neutral-400/80">
-              <ExtraInfo item={item} />
+              {binary ? <DisplayText binary>{item.extra?.info ?? ""}</DisplayText> : <ExtraInfo item={item} />}
             </span>
           </span>
           <a
@@ -284,7 +289,7 @@ function NewsListTimeLine({ items }: { items: NewsItem[] }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            {item.title}
+            <DisplayText binary={binary}>{item.title}</DisplayText>
           </a>
         </li>
       ))}

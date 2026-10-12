@@ -9,6 +9,10 @@ export function safeParseString(str: any) {
   }
 }
 
+export function toBinaryText(value: string) {
+  return Array.from(new TextEncoder().encode(value), byte => byte.toString(2).padStart(8, "0")).join(" ")
+}
+
 export class Timer {
   private timerId?: any
   private start!: number

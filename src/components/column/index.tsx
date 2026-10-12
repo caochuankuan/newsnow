@@ -4,7 +4,7 @@ import { NavBar } from "../navbar"
 import { Dnd } from "./dnd"
 import { currentColumnIDAtom } from "~/atoms"
 
-export function Column({ id }: { id: FixedColumnID }) {
+export function Column({ id, binary = false }: { id: FixedColumnID, binary?: boolean }) {
   const [currentColumnID, setCurrentColumnID] = useAtom(currentColumnIDAtom)
   useEffect(() => {
     setCurrentColumnID(id)
@@ -17,7 +17,7 @@ export function Column({ id }: { id: FixedColumnID }) {
       <div className="flex justify-center md:hidden mb-6">
         <NavBar />
       </div>
-      {id === currentColumnID && <Dnd />}
+      {id === currentColumnID && <Dnd binary={binary} />}
     </>
   )
 }

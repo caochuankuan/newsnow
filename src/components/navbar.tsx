@@ -1,9 +1,10 @@
 import { fixedColumnIds, metadata } from "@shared/metadata"
-import { Link } from "@tanstack/react-router"
+import { Link, useRouterState } from "@tanstack/react-router"
 import { currentColumnIDAtom } from "~/atoms"
 
 export function NavBar() {
   const currentId = useAtomValue(currentColumnIDAtom)
+  const isBinary = useRouterState({ select: state => state.location.pathname === "/binary" })
   const { toggle } = useSearchBar()
   return (
     <span className={$([
@@ -19,7 +20,7 @@ export function NavBar() {
           "cursor-pointer transition-all",
         )}
       >
-        更多
+        {isBinary ? toBinaryText("更多") : "更多"}
       </button>
       {fixedColumnIds.map(columnId => (
         <Link
@@ -31,9 +32,15 @@ export function NavBar() {
             currentId === columnId ? "color-primary font-bold" : "op-70 dark:op-90",
           )}
         >
-          {metadata[columnId].name}
+          {isBinary ? toBinaryText(metadata[columnId].name) : metadata[columnId].name}
         </Link>
       ))}
+      <Link
+        to="/binary"
+        className={$("px-2 hover:(bg-primary/10 rounded-md) cursor-pointer transition-all", isBinary ? "color-primary font-bold" : "op-70 dark:op-90")}
+      >
+        {isBinary ? toBinaryText("01") : "01"}
+      </Link>
     </span>
   )
 }

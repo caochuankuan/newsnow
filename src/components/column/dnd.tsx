@@ -18,7 +18,7 @@ import { currentColumnIDAtom, currentSourcesAtom } from "~/atoms"
 
 const AnimationDuration = 200
 const WIDTH = 350
-export function Dnd() {
+export function Dnd({ binary = false }: { binary?: boolean }) {
   const [items, setItems] = useAtom(currentSourcesAtom)
   const currentColumnID = useAtomValue(currentColumnIDAtom)
   const sortable = currentColumnID === "focus"
@@ -82,7 +82,7 @@ export function Dnd() {
                 },
               }}
             >
-              <SortableCardWrapper id={id} sortable={sortable} />
+              <SortableCardWrapper id={id} sortable={sortable} binary={binary} />
             </motion.li>
           ))}
         </motion.ol>
@@ -171,7 +171,7 @@ function CardOverlay({ id }: { id: SourceID }) {
   )
 }
 
-function SortableCardWrapper({ id, sortable }: ItemsProps & { sortable: boolean }) {
+function SortableCardWrapper({ id, sortable, binary }: ItemsProps & { sortable: boolean, binary: boolean }) {
   const {
     isDragging,
     setNodeRef,
@@ -190,6 +190,7 @@ function SortableCardWrapper({ id, sortable }: ItemsProps & { sortable: boolean 
       <CardWrapper
         ref={setNodeRef}
         id={id}
+        binary={binary}
         isDragging={isDragging}
         setHandleRef={sortable ? setHandleRef : undefined}
       />
